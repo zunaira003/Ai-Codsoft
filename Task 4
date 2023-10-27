@@ -1,0 +1,88 @@
+Create a simple recommendation system that suggests items to nusers based on their preferences. You can use techniques like collaborative filtering or content-based filtering to recommend movies, books, or products to users.
+
+
+
+from google.colab import drive
+
+drive.mount('/content/drive/')
+
+
+import pandas as pd
+
+import pandas as pd
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics.pairwise import linear_kernel
+
+
+# Movie data
+movie_data = pd.DataFrame({
+    'title': ['Toy Story(1995)', 'Money Train', 'Black Sheep(1996) , '],
+    'description': ['Action movie', 'Comedy film', 'Adventure movie']
+})
+
+# Book data
+book_data = pd.DataFrame({
+    'title': ['Clara Callan', 'The Testament', 'Pigs in Heaven'],
+    'description': ['Mystery novel', 'Science fiction book', 'Romance novel']
+})
+
+# Product data
+product_data = pd.DataFrame({
+    'title': ['Shirt', 'Hoodies', 'Pants'],
+    'description': ['Electronics', 'Kitchen appliances', 'Clothing']
+})
+
+
+tfidf_vectorizer = TfidfVectorizer(stop_words='english')
+movie_tfidf_matrix = tfidf_vectorizer.fit_transform(movie_data['description'])
+book_tfidf_matrix = tfidf_vectorizer.fit_transform(book_data['description'])
+product_tfidf_matrix = tfidf_vectorizer.fit_transform(product_data['description'])
+
+
+movie_cosine_sim = linear_kernel(movie_tfidf_matrix, movie_tfidf_matrix)
+book_cosine_sim = linear_kernel(book_tfidf_matrix, book_tfidf_matrix)
+product_cosine_sim = linear_kernel(product_tfidf_matrix, product_tfidf_matrix)
+
+
+user_preferences = "Science fiction book"  # User expresses a preference for a specific item title
+
+# Calculate the similarity between user preferences and all items in each domain
+movie_scores = []
+book_scores = []
+product_scores = []
+
+for i, movie_row in movie_data.iterrows():
+    movie_title = movie_row['title']
+    movie_description = movie_row['description']
+    similarity = linear_kernel(tfidf_vectorizer.transform([user_preferences]), tfidf_vectorizer.transform([movie_description]))[0][0]
+    movie_scores.append((movie_title, similarity))
+
+for i, book_row in book_data.iterrows():
+    book_title = book_row['title']
+    book_description = book_row['description']
+    similarity = linear_kernel(tfidf_vectorizer.transform([user_preferences]), tfidf_vectorizer.transform([book_description]))[0][0]
+    book_scores.append((book_title, similarity))
+
+for i, product_row in product_data.iterrows():
+    product_title = product_row['title']
+    product_description = product_row['description']
+    similarity = linear_kernel(tfidf_vectorizer.transform([user_preferences]), tfidf_vectorizer.transform([product_description]))[0][0]
+    product_scores.append((product_title, similarity))
+
+# Sort items by similarity to user preferences
+movie_scores = sorted(movie_scores, key=lambda x: x[1], reverse=True)
+book_scores = sorted(book_scores, key=lambda x: x[1], reverse=True)
+product_scores = sorted(product_scores, key=lambda x: x[1], reverse=True)
+
+# Recommend the top N items from each domain
+top_movies = movie_scores[1:4]
+top_books = book_scores[1:4]
+top_products = product_scores[1:4]
+
+recommended_movies = [title for title, _ in top_movies]
+recommended_books = [title for title, _ in top_books]
+recommended_products = [title for title, _ in top_products]
+
+print("Recommended Movies:", recommended_movies)
+print("Recommended Books:", recommended_books)
+print("Recommended Products:", recommended_products)
