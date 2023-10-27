@@ -1,0 +1,170 @@
+
+
+Implement an AI agent that plays the classic game of Tic-Tac-Toe against a human player. You can use algorithms like Minimax with or without Alpha-Beta Pruning to make the AI player unbeatable. This project will help you understand game theory and basic search  algorithms.
+
+
+
+from google.colab import drive
+
+drive.mount('/content/drive/')
+
+import tensorflow as tf
+from tensorflow.keras.preprocessing.text import Tokenizer
+from tensorflow.keras.preprocessing.sequence import pad_sequences
+from tensorflow.keras.applications import ResNet50
+from tensorflow.keras.models import Model
+from tensorflow.keras.layers import Input, Embedding, LSTM, Dense
+from tensorflow.keras.applications.resnet50 import preprocess_input
+from tensorflow.keras.preprocessing.image import load_img, img_to_array
+import numpy as np
+
+
+images = [
+    "/content/drive/MyDrive/Animals /Angry/10.jpg",
+    "/content/drive/MyDrive/Animals /Angry/59.jpg",
+    "/content/drive/MyDrive/Animals /Angry/aug-165-22.jpg"
+]
+
+
+images = [
+    "/content/drive/MyDrive/Animals /Master Folder/train/Sad/009.jpg",
+    "/content/drive/MyDrive/Animals /Master Folder/train/happy/012.jpg",
+    "/content/drive/MyDrive/Animals /Master Folder/train/happy/044.jpg"
+    "/content/drive/MyDrive/Animals /Master Folder/train/Angry/17.jpg"
+
+
+]
+
+captions = [
+    "a cat is happy",
+    "a dog is sad",
+    "a horse is angry"
+]
+
+
+
+# Feature extraction using ResNet50
+def extract_image_features(image_path):
+    model = ResNet50(weights="imagenet")
+    model = Model(inputs=model.inputs, outputs=model.layers[-2].output)
+
+    image = load_img(image_path, target_size=(224, 224))
+    image = img_to_array(image)
+    image = preprocess_input(image)
+    image = np.expand_dims(image, axis=0)
+    features = model.predict(image)
+    return features
+
+
+# Tokenize and pad captions
+tokenizer = Tokenizer()
+tokenizer.fit_on_texts(captions)
+sequences = tokenizer.texts_to_sequences(captions)
+max_seq_length = max([len(seq) for seq in sequences])
+vocab_size = len(tokenizer.word_index) + 1
+
+
+
+
+# Define the model
+image_input = Input(shape=(2048,))  # ResNet50 features
+caption_input = Input(shape=(max_seq_length,))
+caption_embedding = Embedding(input_dim=vocab_size, output_dim=256)(caption_input)
+lstm = LSTM(256)(caption_embedding)
+
+
+
+# Merge image and text features
+merged = tf.keras.layers.concatenate([image_input, lstm])
+output = Dense(vocab_size, activation='softmax')(merged)
+
+model = Model(inputs=[image_input, caption_input], outputs=output)
+model.compile(loss='categorical_crossentropy', optimizer='adam')
+
+
+# Data preparation for training (using a simple example)
+input_sequences = sequences
+target_sequences = [sequence[1:] for sequence in sequences]
+
+
+# Pad the sequences
+input_sequences = pad_sequences(input_sequences, maxlen=max_seq_length, padding='post')
+target_sequences = pad_sequences(target_sequences, maxlen=max_seq_length, padding='post')
+
+
+
+# Define the list of image file paths
+image_paths = [
+    "/content/drive/MyDrive/Animals /Master Folder/train/Angry/17.jpg",
+    "/content/drive/MyDrive/Animals /Master Folder/train/Angry/41.jpg",
+
+]
+
+# Extract image features for each image in the dataset
+image_features = []
+
+for image_path in image_paths:
+    features = extract_image_features(image_path)
+    image_features.append(features)
+
+# Now you can use the 'image_features' list in the code for training or inference
+
+
+# Convert the target sequences to one-hot encoded format
+target_sequences = tf.keras.utils.to_categorical(target_sequences, num_classes=vocab_size)
+
+
+
+# Inference: Generate captions for new images (image_features should be the feature vector of a new image)
+def generate_caption(image_features, model, tokenizer, max_seq_length):
+    input_seq = [tokenizer.word_index['a']]  # You can start with a different seed word
+    result = []
+
+    for _ in range(max_seq_length):
+        input_caption = pad_sequences([input_seq], maxlen=max_seq_length, padding='post')
+        output_word_index = np.argmax(model.predict([image_features, input_caption]))
+        output_word = tokenizer.index_word.get(output_word_index, "<OOV>")
+
+        if output_word == "<END>":
+            break
+        result.append(output_word)
+        input_seq.append(output_word_index)
+
+    return " ".join(result)
+
+
+from IPython.display import Image, display
+
+# Replace 'path/to/your/image.jpg' with the path to your testing image
+image_path = '/content/drive/MyDrive/Animals /Master Folder/train/Angry/12.jpg'
+
+# Display the image in the Colab notebook
+display(Image(filename=image_path))
+
+
+
+from IPython.display import Image, display
+
+# Replace 'path/to/your/image.jpg' with the path to your testing image
+image_path = '/content/drive/MyDrive/Animals /Master Folder/test/Sad/042.jpg'
+
+# Display the image in the Colab notebook
+display(Image(filename=image_path))
+
+
+from IPython.display import Image, display
+
+# Replace 'path/to/your/image.jpg' with the path to your testing image
+image_path = '/content/drive/MyDrive/Animals /happy/031.jpg'
+
+# Display the image in the Colab notebook
+display(Image(filename=image_path))
+
+
+
+from IPython.display import Image, display
+
+# Replace 'path/to/your/image.jpg' with the path to your testing image
+image_path = '/content/drive/MyDrive/Animals /Sad/003.jpg'
+# Display the image in the Colab notebook
+display(Image(filename=image_path))
