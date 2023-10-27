@@ -2,3 +2,40 @@
 Build a simple chatbot that responds to user inputs based on predefined rules. Use if-else statements or pattern matching techniques to identify user queries and provide appropriate responses. This will give you a basic understanding of natural
 
 language processing and conversation flow.
+
+
+
+
+import random
+
+# Define a list of predefined user queries and their corresponding responses
+responses = {
+    "hi": "Hello! How can I assist you today?",
+    "hello": "Hi there! How can I help?",
+    "how are you": "I'm just a computer program, but thanks for asking!",
+    "what's your name": "I'm a chatbot. You can call me ChatGPT.",
+    "bye": "Goodbye! If you have more questions, feel free to ask later.",
+    "thanks": "You're welcome!",
+    "default": "I'm sorry, I didn't understand that. Can you please rephrase your question?",
+}
+
+# Main chatbot function
+def chatbot_response(user_input):
+    # Convert user input to lowercase for case-insensitive matching
+    user_input = user_input.lower()
+
+    # Check if the user input matches any predefined queries
+    if user_input in responses:
+        return responses[user_input]
+    else:
+        return responses["default"]
+
+# Chatbot interaction loop
+print("Chatbot: Hello! How can I assist you today?")
+while True:
+    user_input = input("You: ")
+    if user_input.lower() == "exit":
+        print("Chatbot: Goodbye!")
+        break
+    response = chatbot_response(user_input)
+    print("Chatbot:", response)
